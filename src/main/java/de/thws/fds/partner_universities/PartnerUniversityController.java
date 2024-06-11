@@ -13,9 +13,9 @@ import java.util.Optional;
 @RequestMapping("/api/v1/universities")
 public class PartnerUniversityController {
 
-    @Autowired
-    private PartnerUniversityService service;
 
+    private final PartnerUniversityService service;
+    @Autowired
     public PartnerUniversityController(PartnerUniversityService service) {
         this.service = service;
     }

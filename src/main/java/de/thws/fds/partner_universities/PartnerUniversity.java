@@ -1,8 +1,12 @@
 package de.thws.fds.partner_universities;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
+import java.util.List;
+
+import de.thws.fds.modules.Module;
 
 @Entity
 @Table
@@ -21,6 +25,12 @@ public class PartnerUniversity {
     private LocalDate nextSpringSemesterStart;
     private LocalDate nextAutumnSemesterStart;
 
+
+    @JsonManagedReference
+    @OneToMany(mappedBy = "partnerUniversity", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Module> modules;
+
+
     public PartnerUniversity() {
     }
 
@@ -35,6 +45,7 @@ public class PartnerUniversity {
         this.inboundStudents = inboundStudents;
         this.nextSpringSemesterStart = nextSpringSemesterStart;
         this.nextAutumnSemesterStart = nextAutumnSemesterStart;
+
     }
 
     public PartnerUniversity(String name, String country, String departmentName, String departmentUrl, String contactPerson, int outboundStudents, int inboundStudents, LocalDate nextSpringSemesterStart, LocalDate nextAutumnSemesterStart) {
@@ -128,6 +139,15 @@ public class PartnerUniversity {
 
     public void setNextAutumnSemesterStart(LocalDate nextAutumnSemesterStart) {
         this.nextAutumnSemesterStart = nextAutumnSemesterStart;
+    }
+    //NEW
+
+    public List<Module> getModules() {
+        return modules;
+    }
+
+    public void setModules(Module module) {
+        this.modules.add(module);
     }
 }
 
