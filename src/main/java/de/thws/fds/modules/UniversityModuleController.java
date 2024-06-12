@@ -1,25 +1,25 @@
 package de.thws.fds.modules;
 
 import de.thws.fds.partner_universities.PartnerUniversity;
-import de.thws.fds.partner_universities.PartnerUniversityService;
+import de.thws.fds.partner_universities.PartnerUniversityServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/universities/{universityId}/modules")
 public class UniversityModuleController {
 
-    private final PartnerUniversityService universityService;
-    private final ModuleService moduleService;
+    private final PartnerUniversityServiceImpl universityService;
+    private final ModuleServiceImpl moduleServiceImpl;
 
     @Autowired
-    public UniversityModuleController(PartnerUniversityService universityService, ModuleService moduleService) {
+    public UniversityModuleController(PartnerUniversityServiceImpl universityService, ModuleServiceImpl moduleServiceImpl) {
         this.universityService = universityService;
-        this.moduleService = moduleService;
+        this.moduleServiceImpl = moduleServiceImpl;
     }
 
 //    @GetMapping
@@ -35,22 +35,24 @@ public class UniversityModuleController {
 //
 //    }
 @GetMapping
-public ResponseEntity<List<Module>> getAllModules(@PathVariable Long universityId) {
-    Optional<PartnerUniversity> universityOptional = universityService.getUniversityById(universityId);
-    if (universityOptional.isPresent()) {
-        List<Module> modules = universityOptional.get().getModules();
-        return ResponseEntity.ok(modules);
-    } else {
-        return ResponseEntity.notFound().build();
-    }
+public ResponseEntity<Page<Module>> getAllModules(
+        @PathVariable Long universityId,
+        @RequestParam(defaultValue = "0") int pageNo,
+        @RequestParam(defaultValue = "10") int pageSize) {
+
+    Page<Module> modulesPage = moduleServiceImpl.getAllModulesOfUnis(pageNo, pageSize);
+    return ResponseEntity.ok(modulesPage);
 }
+
     @GetMapping("/filter")
-    public List<Module> filterModules(
+    public Page<Module> filterModules(
             @RequestParam Optional<String> name,
             @RequestParam Optional<Integer> semester,
-            @RequestParam Optional<Integer>creditPoints)
+            @RequestParam Optional<Integer>creditPoints,
+            @RequestParam(defaultValue = "0") int pageNo,
+            @RequestParam(defaultValue = "10") int pageSize)
     {
-        return moduleService.filterModulesOfUnis(name, semester, creditPoints);
+        return moduleServiceImpl.filterModulesOfUnis(name, semester, creditPoints,pageNo,pageSize);
     }
 
     @GetMapping("/{moduleId}")
@@ -60,7 +62,7 @@ public ResponseEntity<List<Module>> getAllModules(@PathVariable Long universityI
             return ResponseEntity.notFound().build();
         }
 
-        Module module = moduleService.getModuleByIdAndUniversityId(universityId, moduleId);
+        Module module = moduleServiceImpl.getModuleByIdAndUniversityId(universityId, moduleId);
         return ResponseEntity.ok(module);
 
     }
@@ -74,7 +76,7 @@ public ResponseEntity<List<Module>> getAllModules(@PathVariable Long universityI
         } else {
             PartnerUniversity university = universityOptional.get();
             module.setPartnerUniversity(university);
-            Module savedModule = moduleService.createModuleOfUni(universityId, module);
+            Module savedModule = moduleServiceImpl.createModuleOfUni(universityId, module);
             university.setModules(module);
             return ResponseEntity.ok(savedModule);
 
@@ -94,7 +96,7 @@ public ResponseEntity<List<Module>> getAllModules(@PathVariable Long universityI
                 module.setName(moduleDetails.getName());
                 module.setSemester(moduleDetails.getSemester());
                 module.setCreditPoints(moduleDetails.getCreditPoints());
-                Module updatedModule = moduleService.updateModuleOfUni(module);
+                Module updatedModule = moduleServiceImpl.updateModuleOfUni(module);
                 return ResponseEntity.ok(updatedModule);
             } else {
                 return ResponseEntity.notFound().build();
@@ -107,11 +109,11 @@ public ResponseEntity<List<Module>> getAllModules(@PathVariable Long universityI
     public ResponseEntity<Void> deleteModule(@PathVariable Long universityId, @PathVariable Long moduleId) {
         Optional<PartnerUniversity> universityOptional = universityService.getUniversityById(universityId);
         if (universityOptional.isPresent()) {
-            Optional<Module> moduleOptional = moduleService.getModuleById(moduleId);
+            Optional<Module> moduleOptional = moduleServiceImpl.getModuleById(moduleId);
             if (moduleOptional.isPresent()) {
                 Module module = moduleOptional.get();
                 if (module.getPartnerUniversity().getId().equals(universityId)) {
-                    moduleService.deleteModuleOfUni(moduleId);
+                    moduleServiceImpl.deleteModuleOfUni(moduleId);
                     return ResponseEntity.noContent().build();
                 }
             }

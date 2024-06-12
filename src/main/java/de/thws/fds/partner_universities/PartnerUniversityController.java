@@ -1,12 +1,12 @@
 package de.thws.fds.partner_universities;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -14,25 +14,31 @@ import java.util.Optional;
 public class PartnerUniversityController {
 
 
-    private final PartnerUniversityService service;
+    private final PartnerUniversityServiceImpl service;
+
     @Autowired
-    public PartnerUniversityController(PartnerUniversityService service) {
+    public PartnerUniversityController(PartnerUniversityServiceImpl service) {
         this.service = service;
     }
 
     @GetMapping
-    public List<PartnerUniversity> getAllUniversities() {
-        return service.getAllUniversities();
+    public Page<PartnerUniversity> getAllUniversities(
+            @RequestParam(value = "pageNo", defaultValue = "0", required = false) int pageNo,
+            @RequestParam(value = "pageSize", defaultValue = "10", required = false) int pageSize
+    ) {
+        return service.getAllUniversities(pageNo, pageSize);
     }
 
     @GetMapping("/filter")
-    public List<PartnerUniversity> filterUniversities(
+    public Page<PartnerUniversity> filterUniversities(
             @RequestParam Optional<String> country,
             @RequestParam Optional<String> name,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Optional<LocalDate> spring,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Optional<LocalDate> autumn,
-            @RequestParam Optional<String> contactPerson) {
-        return service.filterUniversities(country, name, spring, autumn, contactPerson);
+            @RequestParam Optional<String> contactPerson,
+            @RequestParam(defaultValue = "0") int pageNo,
+            @RequestParam(defaultValue = "10") int pageSize) {
+        return service.filterUniversities(country, name, spring, autumn, contactPerson, pageNo, pageSize);
     }
 
 
