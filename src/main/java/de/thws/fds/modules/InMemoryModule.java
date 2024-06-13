@@ -20,8 +20,9 @@ public class InMemoryModule {
         return args -> {
             PartnerUniversity christUniversity = partnerUniversityRepository.findById(1L).orElse(null);
             PartnerUniversity lucianUniversity = partnerUniversityRepository.findById(2L).orElse(null);
+            PartnerUniversity sheffieldUniversity = partnerUniversityRepository.findById(3L).orElse(null);
 
-            if (christUniversity != null && lucianUniversity != null) {
+            if (christUniversity != null && lucianUniversity != null && sheffieldUniversity!=null) {
                 Module quantumComputing = new Module(
                         "Quantum Computing",
                         1,
@@ -42,8 +43,14 @@ public class InMemoryModule {
                         10,
                         lucianUniversity
                 );
+                Module os= new Module(
+                        "Operating Systems",
+                        3,
+                        10,
+                        sheffieldUniversity
+                );
 
-                uniModuleRepository.saveAll(List.of(quantumComputing, fds, dmds));
+                uniModuleRepository.saveAll(List.of(quantumComputing, fds, dmds,os));
             }
         };
     }

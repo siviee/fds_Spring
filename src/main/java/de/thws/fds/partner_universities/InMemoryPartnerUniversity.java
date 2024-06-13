@@ -27,7 +27,7 @@ public class InMemoryPartnerUniversity {
     }
 
     @Bean
-    public PartnerUniversity otherUniversity() {
+    public PartnerUniversity lucianUniversity() {
         return new PartnerUniversity(
                 "Lucian Blaga University",
                 "Romania",
@@ -42,9 +42,25 @@ public class InMemoryPartnerUniversity {
     }
 
     @Bean
+    public PartnerUniversity sheffieldUniversity() {
+        return new PartnerUniversity(
+                "University Of Sheffield",
+                "UK",
+                "CS",
+                "www.uni-sheffield.uk",
+                "Dr. Rose Smith",
+                20,
+                15,
+                LocalDate.of(2023, 1, 30),
+                LocalDate.of(2023, 10, 1)
+        );
+    }
+
+
+    @Bean
     @Order(1)
     @Transactional
     public CommandLineRunner commandLineRunner(PartnerUniversityRepo partnerUniversityRepository) {
-        return args -> partnerUniversityRepository.saveAll(List.of(christUniversity(), otherUniversity()));
+        return args -> partnerUniversityRepository.saveAll(List.of(christUniversity(), lucianUniversity(),sheffieldUniversity()));
     }
 }

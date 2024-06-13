@@ -23,11 +23,11 @@ public class ModuleServiceImpl implements ModuleService {
         this.uniRepo = uniRepo;
     }
 
-    @Override
-    public Page<Module> getAllModulesOfUnis(int pageNo, int pageSize) {
-        Pageable pageable = PageRequest.of(pageNo, pageSize);
-        return moduleRepo.findAll(pageable);
-    }
+//    @Override
+//    public Page<Module> getAllModulesOfUnis(int pageNo, int pageSize) {
+//        Pageable pageable = PageRequest.of(pageNo, pageSize);
+//        return moduleRepo.findAll(pageable);
+//    }
 
     @Override
     public Optional<Module> getModuleById(Long id) {
@@ -68,9 +68,10 @@ public class ModuleServiceImpl implements ModuleService {
     public void deleteModuleOfUni(Long id) {
         moduleRepo.deleteById(id);
     }
-
-    public Module getAllModulesOfUniversity(Long universityId) {
-        return moduleRepo.findByPartnerUniversityId(universityId);
+@Override
+    public Page<Module> getAllModulesOfUniversity(Long universityId, int pageNo, int pageSize) {
+        Pageable pageable = PageRequest.of(pageNo, pageSize);
+        return moduleRepo.findByPartnerUniversityId(universityId, pageable);
     }
 
     public Module getModuleByIdAndUniversityId(Long universityId, Long moduleId) {

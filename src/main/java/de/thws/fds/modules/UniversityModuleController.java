@@ -4,6 +4,8 @@ import de.thws.fds.partner_universities.PartnerUniversity;
 import de.thws.fds.partner_universities.PartnerUniversityServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,33 +17,34 @@ public class UniversityModuleController {
 
     private final PartnerUniversityServiceImpl universityService;
     private final ModuleServiceImpl moduleServiceImpl;
+    private final ModuleAssembler moduleAssembler;
 
     @Autowired
-    public UniversityModuleController(PartnerUniversityServiceImpl universityService, ModuleServiceImpl moduleServiceImpl) {
+    public UniversityModuleController(PartnerUniversityServiceImpl universityService, ModuleServiceImpl moduleServiceImpl, ModuleAssembler moduleAssembler) {
         this.universityService = universityService;
         this.moduleServiceImpl = moduleServiceImpl;
+        this.moduleAssembler = moduleAssembler;
     }
 
-//    @GetMapping
-//    public ResponseEntity<List<Module>> getAllModules(@PathVariable Long universityId) {
-//        Optional<PartnerUniversity> universityOptional = universityService.getUniversityById(universityId);
-//        if (universityOptional.isPresent()) {
-//            //PartnerUniversity university = universityOptional.get();
-//            Module modules = moduleService.getAllModulesOfUniversity(universityId);
-//            return ResponseEntity.ok(Collections.singletonList(modules));
-//        } else {
-//            return ResponseEntity.notFound().build();
-//        }
-//
-//    }
+
+//@GetMapping
+//public ResponseEntity<Page<Module>> getAllModules(
+//        @PathVariable Long universityId,
+//        @RequestParam(defaultValue = "0") int pageNo,
+//        @RequestParam(defaultValue = "10") int pageSize) {
+////getAllModulesofUniID brauchen wir hier!
+//    Page<Module> modulesPage = moduleServiceImpl.getAllModulesOfUnis(pageNo, pageSize);
+//    return ResponseEntity.ok(modulesPage);
+//}
 @GetMapping
-public ResponseEntity<Page<Module>> getAllModules(
+public ResponseEntity<PagedModel<EntityModel<Module>>> getAllModules(
         @PathVariable Long universityId,
         @RequestParam(defaultValue = "0") int pageNo,
         @RequestParam(defaultValue = "10") int pageSize) {
 
-    Page<Module> modulesPage = moduleServiceImpl.getAllModulesOfUnis(pageNo, pageSize);
-    return ResponseEntity.ok(modulesPage);
+    Page<Module> modulesPage = moduleServiceImpl.getAllModulesOfUniversity(universityId, pageNo, pageSize);
+    PagedModel<EntityModel<Module>> entityModels = moduleAssembler.toPagedModel(modulesPage, universityId);
+    return ResponseEntity.ok(entityModels);
 }
 
     @GetMapping("/filter")

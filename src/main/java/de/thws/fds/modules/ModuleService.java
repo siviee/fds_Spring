@@ -5,7 +5,7 @@ import org.springframework.data.domain.Page;
 import java.util.Optional;
 
 public interface ModuleService {
-    Page<Module> getAllModulesOfUnis(int pageNo, int pageSize);
+//    Page<Module> getAllModulesOfUnis(int pageNo, int pageSize);
 
     Optional<Module> getModuleById(Long id);
 
@@ -15,7 +15,7 @@ public interface ModuleService {
 
     void deleteModuleOfUni(Long id);
 
-    Module getAllModulesOfUniversity(Long universityId);
+    Page<Module> getAllModulesOfUniversity(Long universityId, int pageNo, int pageSize);
 
     Module getModuleByIdAndUniversityId(Long universityId, Long moduleId);
 

@@ -27,7 +27,6 @@ public class Module {
     public Module() {
     }
 
-    //PartnerUni only in one constructor with id --> to map it properly
     public Module(Long id, String name, int semester, int creditPoints, PartnerUniversity partnerUniversity) {
         this.id = id;
         this.name = name;
