@@ -23,12 +23,6 @@ public class ModuleServiceImpl implements ModuleService {
         this.uniRepo = uniRepo;
     }
 
-//    @Override
-//    public Page<Module> getAllModulesOfUnis(int pageNo, int pageSize) {
-//        Pageable pageable = PageRequest.of(pageNo, pageSize);
-//        return moduleRepo.findAll(pageable);
-//    }
-
     @Override
     public Optional<Module> getModuleById(Long id) {
         return moduleRepo.findById(id);
@@ -68,7 +62,8 @@ public class ModuleServiceImpl implements ModuleService {
     public void deleteModuleOfUni(Long id) {
         moduleRepo.deleteById(id);
     }
-@Override
+
+    @Override
     public Page<Module> getAllModulesOfUniversity(Long universityId, int pageNo, int pageSize) {
         Pageable pageable = PageRequest.of(pageNo, pageSize);
         return moduleRepo.findByPartnerUniversityId(universityId, pageable);
@@ -78,6 +73,7 @@ public class ModuleServiceImpl implements ModuleService {
         return moduleRepo.findByPartnerUniversityIdAndId(universityId, moduleId);
     }
 
+    //Filtering
     @Override
     public Page<Module> filterModulesOfUnis(Optional<String> name, Optional<Integer> semester, Optional<Integer> creditPoints, int pageNo,
                                             int pageSize) {

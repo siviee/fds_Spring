@@ -5,8 +5,6 @@ import org.springframework.data.domain.Page;
 import java.util.Optional;
 
 public interface ModuleService {
-//    Page<Module> getAllModulesOfUnis(int pageNo, int pageSize);
-
     Optional<Module> getModuleById(Long id);
 
     Module createModuleOfUni(Long universityId, Module module);

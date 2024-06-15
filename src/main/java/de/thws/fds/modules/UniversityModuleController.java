@@ -5,11 +5,17 @@ import de.thws.fds.partner_universities.PartnerUniversityServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.Link;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/api/v1/universities/{universityId}/modules")
@@ -17,62 +23,116 @@ public class UniversityModuleController {
 
     private final PartnerUniversityServiceImpl universityService;
     private final ModuleServiceImpl moduleServiceImpl;
-    private final ModuleAssembler moduleAssembler;
+
 
     @Autowired
-    public UniversityModuleController(PartnerUniversityServiceImpl universityService, ModuleServiceImpl moduleServiceImpl, ModuleAssembler moduleAssembler) {
+    public UniversityModuleController(PartnerUniversityServiceImpl universityService, ModuleServiceImpl moduleServiceImpl) {
         this.universityService = universityService;
         this.moduleServiceImpl = moduleServiceImpl;
-        this.moduleAssembler = moduleAssembler;
     }
 
+    @GetMapping
+    public ResponseEntity<PagedModel<EntityModel<Module>>> getAllModules(
+            @PathVariable Long universityId,
+            @RequestParam(defaultValue = "0") int pageNo,
+            @RequestParam(defaultValue = "10") int pageSize) {
 
-//@GetMapping
-//public ResponseEntity<Page<Module>> getAllModules(
-//        @PathVariable Long universityId,
-//        @RequestParam(defaultValue = "0") int pageNo,
-//        @RequestParam(defaultValue = "10") int pageSize) {
-////getAllModulesofUniID brauchen wir hier!
-//    Page<Module> modulesPage = moduleServiceImpl.getAllModulesOfUnis(pageNo, pageSize);
-//    return ResponseEntity.ok(modulesPage);
-//}
-@GetMapping
-public ResponseEntity<PagedModel<EntityModel<Module>>> getAllModules(
-        @PathVariable Long universityId,
-        @RequestParam(defaultValue = "0") int pageNo,
-        @RequestParam(defaultValue = "10") int pageSize) {
+        Page<Module> modulesPage = moduleServiceImpl.getAllModulesOfUniversity(universityId, pageNo, pageSize);
 
-    Page<Module> modulesPage = moduleServiceImpl.getAllModulesOfUniversity(universityId, pageNo, pageSize);
-    PagedModel<EntityModel<Module>> entityModels = moduleAssembler.toPagedModel(modulesPage, universityId);
-    return ResponseEntity.ok(entityModels);
-}
+        // Convert Page<Module> to List<EntityModel<Module>> with self links
+        List<EntityModel<Module>> moduleModels = modulesPage.getContent().stream()
+                .map(module -> EntityModel.of(module,
+                        // Add self-link for each module -->"getSingleUni"
+                        linkTo(methodOn(UniversityModuleController.class).getModuleById(universityId, module.getId())).withSelfRel()
+                ))
+                .collect(Collectors.toList());
+
+
+        PagedModel<EntityModel<Module>> pagedModel = PagedModel.of(moduleModels,
+                new PagedModel.PageMetadata(modulesPage.getSize(), modulesPage.getNumber(), modulesPage.getTotalElements(), modulesPage.getTotalPages())
+        );
+
+        //link to post new module of a Uni
+        Link postLink = linkTo(methodOn(UniversityModuleController.class).addModule(universityId, null))
+                .withRel("add-module")
+                .withType("POST");
+        //link to filter modules of a Uni
+        Link filterLink = linkTo(methodOn(UniversityModuleController.class).filterModules(null, null, null, 0, 10))
+                .withRel("filter-modules")
+                .withType("GET");
+        pagedModel.add(postLink, filterLink);
+
+        return ResponseEntity.ok(pagedModel);
+    }
 
     @GetMapping("/filter")
-    public Page<Module> filterModules(
+    public ResponseEntity<PagedModel<EntityModel<Module>>> filterModules(
             @RequestParam Optional<String> name,
             @RequestParam Optional<Integer> semester,
-            @RequestParam Optional<Integer>creditPoints,
+            @RequestParam Optional<Integer> creditPoints,
             @RequestParam(defaultValue = "0") int pageNo,
-            @RequestParam(defaultValue = "10") int pageSize)
-    {
-        return moduleServiceImpl.filterModulesOfUnis(name, semester, creditPoints,pageNo,pageSize);
+            @RequestParam(defaultValue = "10") int pageSize) {
+
+        Page<Module> filteredPage = moduleServiceImpl.filterModulesOfUnis(name, semester, creditPoints, pageNo, pageSize);
+
+        List<EntityModel<Module>> moduleModels = filteredPage.getContent().stream()
+                .map(module -> {
+                    Long universityId = module.getPartnerUniversity().getId();
+                    return EntityModel.of(module,
+                            linkTo(methodOn(UniversityModuleController.class).getModuleById(universityId, module.getId())).withSelfRel()
+                    );
+                })
+                .collect(Collectors.toList());
+
+        PagedModel.PageMetadata pageMetadata = new PagedModel.PageMetadata(
+                filteredPage.getSize(),
+                filteredPage.getNumber(),
+                filteredPage.getTotalElements(),
+                filteredPage.getTotalPages()
+        );
+
+        PagedModel<EntityModel<Module>> pagedModel = PagedModel.of(moduleModels, pageMetadata);
+
+        return ResponseEntity.ok(pagedModel);
     }
 
+
     @GetMapping("/{moduleId}")
-    public ResponseEntity<Module> getModuleById(@PathVariable Long universityId, @PathVariable Long moduleId) {
+    public ResponseEntity<EntityModel<Module>> getModuleById(@PathVariable Long universityId, @PathVariable Long moduleId) {
         Optional<PartnerUniversity> universityOptional = universityService.getUniversityById(universityId);
         if (universityOptional.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
         Module module = moduleServiceImpl.getModuleByIdAndUniversityId(universityId, moduleId);
-        return ResponseEntity.ok(module);
+        EntityModel<Module> moduleModel = EntityModel.of(module);
 
+        // link to update module of a Uni
+        moduleModel.add(
+                linkTo(methodOn(UniversityModuleController.class).updateModule(universityId, moduleId, null))
+                        .withRel("update")
+                        .withType("PUT")
+        );
+
+        // link to delete module of a Uni
+        moduleModel.add(
+                linkTo(methodOn(UniversityModuleController.class).deleteModule(universityId, moduleId))
+                        .withRel("delete")
+                        .withType("DELETE")
+        );
+
+        //link to get all modules of a Uni
+        moduleModel.add(
+                linkTo(methodOn(UniversityModuleController.class).getAllModules(universityId, 0, 10))
+                        .withRel("all-modules")
+        );
+
+        return ResponseEntity.ok(moduleModel);
     }
 
 
-    @PostMapping
-    public ResponseEntity<Module> addModule(@PathVariable Long universityId, @RequestBody Module module) {
+    @PostMapping("/create")
+    public ResponseEntity<EntityModel<Module>> addModule(@PathVariable Long universityId, @RequestBody Module module) {
         Optional<PartnerUniversity> universityOptional = universityService.getUniversityById(universityId);
         if (universityOptional.isEmpty()) {
             return ResponseEntity.notFound().build();
@@ -80,14 +140,20 @@ public ResponseEntity<PagedModel<EntityModel<Module>>> getAllModules(
             PartnerUniversity university = universityOptional.get();
             module.setPartnerUniversity(university);
             Module savedModule = moduleServiceImpl.createModuleOfUni(universityId, module);
-            university.setModules(module);
-            return ResponseEntity.ok(savedModule);
 
+            //link to get all modules of a Uni
+            Link getAllModulesLink = linkTo(methodOn(UniversityModuleController.class).getAllModules(universityId, 0, 10))
+                    .withRel("all-modules").withType("GET");
+
+            EntityModel<Module> moduleModel = EntityModel.of(savedModule, getAllModulesLink);
+
+            return ResponseEntity.ok(moduleModel);
         }
     }
 
-    @PutMapping("/{moduleId}")
-    public ResponseEntity<Module> updateModule(@PathVariable Long universityId, @PathVariable Long moduleId, @RequestBody Module moduleDetails) {
+
+    @PutMapping("/{moduleId}/update")
+    public ResponseEntity<EntityModel<Module>> updateModule(@PathVariable Long universityId, @PathVariable Long moduleId, @RequestBody Module moduleDetails) {
         Optional<PartnerUniversity> universityOptional = universityService.getUniversityById(universityId);
         if (universityOptional.isPresent()) {
             PartnerUniversity university = universityOptional.get();
@@ -100,7 +166,14 @@ public ResponseEntity<PagedModel<EntityModel<Module>>> getAllModules(
                 module.setSemester(moduleDetails.getSemester());
                 module.setCreditPoints(moduleDetails.getCreditPoints());
                 Module updatedModule = moduleServiceImpl.updateModuleOfUni(module);
-                return ResponseEntity.ok(updatedModule);
+
+                //link to get module by the id after updating an existing module of a Uni
+                Link getModuleLink = linkTo(methodOn(UniversityModuleController.class).getModuleById(universityId, moduleId))
+                        .withRel("module").withType("GET");
+
+                EntityModel<Module> moduleModel = EntityModel.of(updatedModule, getModuleLink);
+
+                return ResponseEntity.ok(moduleModel);
             } else {
                 return ResponseEntity.notFound().build();
             }
@@ -108,7 +181,8 @@ public ResponseEntity<PagedModel<EntityModel<Module>>> getAllModules(
         return ResponseEntity.notFound().build();
     }
 
-    @DeleteMapping("/{moduleId}")
+    //No TransitionLink for Delete
+    @DeleteMapping("/{moduleId}/delete")
     public ResponseEntity<Void> deleteModule(@PathVariable Long universityId, @PathVariable Long moduleId) {
         Optional<PartnerUniversity> universityOptional = universityService.getUniversityById(universityId);
         if (universityOptional.isPresent()) {
