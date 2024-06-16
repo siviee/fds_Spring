@@ -1,12 +1,14 @@
-package de.thws.fds.modules;
+package de.thws.fds.server.modules.database;
 
+import de.thws.fds.server.modules.model.Module;
+import de.thws.fds.server.modules.repository.ModuleRepo;
 import jakarta.transaction.Transactional;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
-import de.thws.fds.partner_universities.PartnerUniversity;
-import de.thws.fds.partner_universities.PartnerUniversityRepo;
+import de.thws.fds.server.partner_universities.model.PartnerUniversity;
+import de.thws.fds.server.partner_universities.repository.PartnerUniversityRepo;
 
 import java.util.List;
 

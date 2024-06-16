@@ -1,5 +1,6 @@
-package de.thws.fds.partner_universities;
+package de.thws.fds.server.partner_universities.service;
 
+import de.thws.fds.server.partner_universities.model.PartnerUniversity;
 import org.springframework.data.domain.Page;
 
 import java.time.LocalDate;

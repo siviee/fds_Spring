@@ -1,5 +1,7 @@
-package de.thws.fds.partner_universities;
+package de.thws.fds.server.partner_universities.database;
 
+import de.thws.fds.server.partner_universities.repository.PartnerUniversityRepo;
+import de.thws.fds.server.partner_universities.model.PartnerUniversity;
 import jakarta.transaction.Transactional;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;

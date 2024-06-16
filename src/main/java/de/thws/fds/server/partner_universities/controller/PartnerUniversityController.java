@@ -1,6 +1,8 @@
-package de.thws.fds.partner_universities;
+package de.thws.fds.server.partner_universities.controller;
 
-import de.thws.fds.modules.UniversityModuleController;
+import de.thws.fds.server.modules.controller.UniversityModuleController;
+import de.thws.fds.server.partner_universities.service.PartnerUniversityServiceImpl;
+import de.thws.fds.server.partner_universities.model.PartnerUniversity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;

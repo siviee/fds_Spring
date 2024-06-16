@@ -1,5 +1,6 @@
-package de.thws.fds.modules;
+package de.thws.fds.server.modules.repository;
 
+import de.thws.fds.server.modules.model.Module;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

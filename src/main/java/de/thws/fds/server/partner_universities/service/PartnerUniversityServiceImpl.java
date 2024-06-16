@@ -1,5 +1,7 @@
-package de.thws.fds.partner_universities;
+package de.thws.fds.server.partner_universities.service;
 
+import de.thws.fds.server.partner_universities.model.PartnerUniversity;
+import de.thws.fds.server.partner_universities.repository.PartnerUniversityRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

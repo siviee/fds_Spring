@@ -1,7 +1,7 @@
-package de.thws.fds.modules;
+package de.thws.fds.server.modules.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import de.thws.fds.partner_universities.PartnerUniversity;
+import de.thws.fds.server.partner_universities.model.PartnerUniversity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.*;

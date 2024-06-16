@@ -1,4 +1,4 @@
-package de.thws.fds.partner_universities;
+package de.thws.fds.server.partner_universities.model;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
@@ -6,7 +6,7 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.List;
 
-import de.thws.fds.modules.Module;
+import de.thws.fds.server.modules.model.Module;
 
 @Entity
 @Table
