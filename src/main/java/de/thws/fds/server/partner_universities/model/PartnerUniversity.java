@@ -1,9 +1,12 @@
 package de.thws.fds.server.partner_universities.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonSetter;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import de.thws.fds.server.modules.model.Module;
@@ -22,7 +25,9 @@ public class PartnerUniversity {
     private String contactPerson;
     private int outboundStudents;
     private int inboundStudents;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate nextSpringSemesterStart;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate nextAutumnSemesterStart;
 
 
@@ -146,8 +151,25 @@ public class PartnerUniversity {
         return modules;
     }
 
-    public void setModules(Module module) {
-        this.modules.add(module);
+    @JsonSetter
+    public void setModules(List<Module> modules) {
+        this.modules = modules != null ? modules : new ArrayList<>();
+    }
+
+    @Override
+    public String toString() {
+        return "PartnerUniversity{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", country='" + country + '\'' +
+                ", departmentName='" + departmentName + '\'' +
+                ", website='" + departmentUrl + '\'' +
+                ", contactPerson='" + contactPerson + '\'' +
+                ", outboundStudents=" + outboundStudents +
+                ", inboundStudents=" + inboundStudents +
+                ", nextSpringSemesterStart=" + nextSpringSemesterStart +
+                ", nextAutumnSemesterStart=" + nextAutumnSemesterStart +
+                '}';
     }
 }
 

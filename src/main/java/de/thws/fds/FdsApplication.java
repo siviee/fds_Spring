@@ -1,4 +1,4 @@
-package de.thws.fds.server;
+package de.thws.fds;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
