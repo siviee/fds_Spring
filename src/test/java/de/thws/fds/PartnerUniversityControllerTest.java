@@ -8,6 +8,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -17,9 +18,6 @@ public class PartnerUniversityControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
 
     //Checks the functionality of the UniversityController Class
     @Test
@@ -31,5 +29,13 @@ public class PartnerUniversityControllerTest {
                         .content(json))
                 .andExpect(status().isCreated());
         //Test helped identify problems with JSON serialisation. Test passed successfully
+    }
+
+    @Test
+    public void testGetUniById() throws Exception {
+        long id = 1L;
+        mockMvc.perform(get("/api/v1/universities/" + id)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is2xxSuccessful());
     }
 }

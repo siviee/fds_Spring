@@ -2,8 +2,6 @@ package de.thws.fds.server.modules.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import de.thws.fds.server.partner_universities.model.PartnerUniversity;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.*;
 
 
@@ -74,7 +72,19 @@ public class Module {
         return partnerUniversity;
     }
 
-    public void setPartnerUniversity(PartnerUniversity partnerUniversity) {
+        public void setPartnerUniversity(PartnerUniversity partnerUniversity) {
         this.partnerUniversity = partnerUniversity;
+    }
+
+
+    @Override
+    public String toString() {
+        return "Module{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", semester=" + semester +
+                ", creditPoints=" + creditPoints +
+                ", partnerUniversity=" + partnerUniversity +
+                '}';
     }
 }
