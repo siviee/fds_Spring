@@ -1,8 +1,8 @@
 package de.thws.fds.server.partner_universities.controller;
 
 import de.thws.fds.server.modules.controller.UniversityModuleController;
-import de.thws.fds.server.partner_universities.service.PartnerUniversityServiceImpl;
 import de.thws.fds.server.partner_universities.model.PartnerUniversity;
+import de.thws.fds.server.partner_universities.service.PartnerUniversityServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -51,33 +51,39 @@ public class PartnerUniversityController {
      * @param pageNo   the page number
      * @param pageSize the page size
      * @return a collection of partner universities with pagination with further links,
-     * in response-body: getSingle (self-link) and getAll(self-link), getAllModules
+     * in response-body: getSingle (self-link), getAllModules, pagination-links (next/previous)
      * in response header: postUni, filterUni
      */
     @GetMapping
     public ResponseEntity<CollectionModel<EntityModel<PartnerUniversity>>> getAllUniversities(
             @RequestParam(value = "pageNo", defaultValue = "0", required = false) int pageNo,
-            @RequestParam(value = "pageSize", defaultValue = "10", required = false) int pageSize
+            @RequestParam(value = "pageSize", defaultValue = "10", required = false) int pageSize,
+            @RequestParam(value = "sortDirection", required = false) String sortDirection
     ) {
-        Page<PartnerUniversity> universities = service.getAllUniversities(pageNo, pageSize);
+        Page<PartnerUniversity> universitiesPage = service.getAllUniversities(pageNo, pageSize, sortDirection);
 
-        List<EntityModel<PartnerUniversity>> universityModels = universities.getContent().stream()
+        List<EntityModel<PartnerUniversity>> universityModels = universitiesPage.getContent().stream()
                 .map(university -> EntityModel.of(university,
                         linkTo(methodOn(PartnerUniversityController.class).getUniversityById(university.getId())).withSelfRel(),
                         linkTo(methodOn(UniversityModuleController.class).getAllModules(university.getId(), 0, 10)).withRel("all-modules").withType("GET")
                 ))
                 .collect(Collectors.toList());
 
-        Link postLink = linkTo(methodOn(PartnerUniversityController.class).addUniversity(null))
-                .withRel("add-university").withType("POST");
-        Link filterLink = linkTo(methodOn(PartnerUniversityController.class).filterUniversities(null, null, null, null, null, 0, 10))
-                .withRel("filter-universities").withType("GET");
+        CollectionModel<EntityModel<PartnerUniversity>> collectionModel = CollectionModel.of(universityModels);
 
+        // Pagination links
+        if (universitiesPage.hasPrevious()) {
+            Link previousLink = linkTo(methodOn(PartnerUniversityController.class).getAllUniversities(pageNo - 1, pageSize, sortDirection)).withRel("previous").withType("GET");
+            collectionModel.add(previousLink);
+        }
+        if (universitiesPage.hasNext()) {
+            Link nextLink = linkTo(methodOn(PartnerUniversityController.class).getAllUniversities(pageNo + 1, pageSize, sortDirection)).withRel("next").withType("GET");
+            collectionModel.add(nextLink);
+        }
 
-        Link selfLink = linkTo(methodOn(PartnerUniversityController.class).getAllUniversities(pageNo, pageSize))
-                .withSelfRel().withType("GET");
-
-        CollectionModel<EntityModel<PartnerUniversity>> collectionModel = CollectionModel.of(universityModels, selfLink);
+        // Header links
+        Link postLink = linkTo(methodOn(PartnerUniversityController.class).addUniversity(null)).withRel("add-university").withType("POST");
+        Link filterLink = linkTo(methodOn(PartnerUniversityController.class).filterUniversities(null, null, null, null, null, 0, 10)).withRel("filter-universities").withType("GET");
 
 
         return ResponseEntity.ok()
@@ -85,6 +91,7 @@ public class PartnerUniversityController {
                 .header("Link", filterLink.getHref() + "; rel=\"filter-universities\"")
                 .body(collectionModel);
     }
+
 
 
     /**
@@ -168,7 +175,7 @@ public class PartnerUniversityController {
         );
 
         return ResponseEntity.created(linkTo(PartnerUniversityController.class).slash(createdUniversity.getId()).toUri())
-                .header("Link", linkTo(methodOn(PartnerUniversityController.class).getAllUniversities(0, 10)).withRel("all-universities").getHref() + "; rel=\"all-universities\"")
+                .header("Link", linkTo(methodOn(PartnerUniversityController.class).getAllUniversities(0, 10,"asc")).withRel("all-universities").getHref() + "; rel=\"all-universities\"")
                 .body(universityModel);
     }
 

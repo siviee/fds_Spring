@@ -17,11 +17,12 @@ public interface PartnerUniversityService {
     /**
      * Retrieves all partner universities with pagination.
      *
-     * @param pageNo   the page number
-     * @param pageSize the page size
+     * @param pageNo        the page number
+     * @param pageSize      the page size
+     * @param sortDirection tells in which order to sort after name: asc or desc
      * @return a page of partner universities
      */
-    Page<PartnerUniversity> getAllUniversities(int pageNo, int pageSize);
+    Page<PartnerUniversity> getAllUniversities(int pageNo, int pageSize, String sortDirection);
 
 
     /**

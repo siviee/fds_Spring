@@ -52,21 +52,19 @@ public class UniversityModuleController {
      * @param pageNo       The page number for pagination.
      * @param pageSize     The page size for pagination.
      * @return A paginated list of modules with further links,
-     * in response body: getSingle,
+     * in response body: getSingle,pagination-links (next/previous)
      * in response header: postModule, filterModules.
      */
     @GetMapping
     public ResponseEntity<PagedModel<EntityModel<Module>>> getAllModules(
             @PathVariable Long universityId,
             @RequestParam(defaultValue = "0") int pageNo,
-            @RequestParam(defaultValue = "10") int pageSize) {
-
+            @RequestParam(defaultValue = "10") int pageSize
+    ) {
         Page<Module> modulesPage = moduleServiceImpl.getAllModulesOfUniversity(universityId, pageNo, pageSize);
 
-        // Convert Page<Module> to List<EntityModel<Module>> with self links
         List<EntityModel<Module>> moduleModels = modulesPage.getContent().stream()
                 .map(module -> EntityModel.of(module,
-                        // Add self-link for each module -->"getSingleUni"
                         linkTo(methodOn(UniversityModuleController.class).getModuleById(universityId, module.getId())).withSelfRel()
                 ))
                 .collect(Collectors.toList());
@@ -75,12 +73,19 @@ public class UniversityModuleController {
                 new PagedModel.PageMetadata(modulesPage.getSize(), modulesPage.getNumber(), modulesPage.getTotalElements(), modulesPage.getTotalPages())
         );
 
-        // Add self-link for the method getAllModules
-        Link selfLink = linkTo(methodOn(UniversityModuleController.class).getAllModules(universityId, pageNo, pageSize))
-                .withSelfRel().withType("GET");
-        pagedModel.add(selfLink);
 
-        // Links in den Header verschieben
+        if (modulesPage.hasPrevious()) {
+            Link previousLink = linkTo(methodOn(UniversityModuleController.class).getAllModules(universityId, pageNo - 1, pageSize))
+                    .withRel("previous").withType("GET");
+            pagedModel.add(previousLink);
+        }
+
+        if (modulesPage.hasNext()) {
+            Link nextLink = linkTo(methodOn(UniversityModuleController.class).getAllModules(universityId, pageNo + 1, pageSize))
+                    .withRel("next").withType("GET");
+            pagedModel.add(nextLink);
+        }
+
         Link postLink = linkTo(methodOn(UniversityModuleController.class).addModule(universityId, null))
                 .withRel("add-module").withType("POST");
         Link filterLink = linkTo(methodOn(UniversityModuleController.class).filterModules(null, null, null, 0, 10))
@@ -91,6 +96,7 @@ public class UniversityModuleController {
                 .header("Link", filterLink.getHref() + "; rel=\"filter-modules\"")
                 .body(pagedModel);
     }
+
 
 
     /**

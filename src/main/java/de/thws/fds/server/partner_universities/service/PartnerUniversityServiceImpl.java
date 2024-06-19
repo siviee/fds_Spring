@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
@@ -22,8 +23,12 @@ public class PartnerUniversityServiceImpl implements PartnerUniversityService {
     private PartnerUniversityRepo repository;
 
     @Override
-    public Page<PartnerUniversity> getAllUniversities(int pageNo, int pageSize) {
-        Pageable pageable = PageRequest.of(pageNo, pageSize);
+    public Page<PartnerUniversity> getAllUniversities(int pageNo, int pageSize,String sortDirection) {
+        Sort sort = sortDirection != null && sortDirection.equalsIgnoreCase("desc")
+                ? Sort.by("name").descending()
+                : Sort.by("name").ascending();
+
+        Pageable pageable = PageRequest.of(pageNo, pageSize, sort);
         return repository.findAll(pageable);
     }
 
@@ -53,8 +58,7 @@ public class PartnerUniversityServiceImpl implements PartnerUniversityService {
         if (contactPerson.isPresent()) {
             spec = spec.and((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("contactPerson"), contactPerson.get()));
         }
-
-        Pageable pageable = PageRequest.of(pageNo, pageSize);
+        Pageable pageable = PageRequest.of(pageNo, pageSize, Sort.by("name").ascending());
         return repository.findAll(spec, pageable);
     }
 
