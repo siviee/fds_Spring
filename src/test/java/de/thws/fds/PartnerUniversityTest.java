@@ -17,7 +17,11 @@ public class PartnerUniversityTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    //Checks the Serialization and Deserialization
+    /**
+     * Checks the Serialization and Deserialization of PartnerUniversity
+     *
+     * @throws Exception if De-/Serialization is incorrect
+     */
     @Test
     public void testSerialization() throws Exception {
         PartnerUniversity university = new PartnerUniversity();

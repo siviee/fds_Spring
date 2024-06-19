@@ -6,7 +6,11 @@ import org.springframework.hateoas.RepresentationModel;
 import de.thws.fds.server.modules.model.Module;
 
 import java.util.List;
-//wrapper class to handle the HATEOAS CollectionModel in UniversityModuleController
+
+/**
+ * wrapper class to handle the HATEOAS CollectionModel in UniversityModuleController
+ */
+
 public class ModuleCollectionModel extends RepresentationModel<ModuleCollectionModel> {
     @JsonProperty("_embedded")
     private EmbeddedModuleList _embedded;

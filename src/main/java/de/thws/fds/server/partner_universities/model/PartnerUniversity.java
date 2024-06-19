@@ -11,6 +11,13 @@ import java.util.List;
 
 import de.thws.fds.server.modules.model.Module;
 
+/**
+ * Represents a  partner university.
+ * A university is a primary-ressource and contains information like name of the university, country,
+ * department name, department URL, contact person, outboundStudents(number of students university can send),
+ * inboundStudents(number of students university can accept),nextSpringSemester(Date when the spring semester starts),
+ * nextAutumnSemester(Date when the autumn semester starts) and a list of modules.
+ */
 @Entity
 @Table
 public class PartnerUniversity {

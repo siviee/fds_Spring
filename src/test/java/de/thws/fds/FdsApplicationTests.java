@@ -17,6 +17,9 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Test-class to Test Interaction Client/Server
+ */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("text")
 class FdsApplicationTests {
@@ -41,7 +44,7 @@ class FdsApplicationTests {
 
     }
 
-    //---------------------------Testing Endpoint "Partner University" ------------------------------------------------
+    //---------------------------Testing "Partner University" ------------------------------------------------
 
     @Test
     void testGetUniById() {
@@ -151,7 +154,7 @@ class FdsApplicationTests {
     }
 
 
-    //----------------------------------Testing Endpoint "Modules" -----------------------------------------------------
+    //----------------------------------Testing "Modules" -----------------------------------------------------
     @Test
     void testGetModuleOfUniById() {
         PartnerUniversity existingUniversity = partnerUniversityClient.getPartnerUniversityById(3L);
@@ -169,6 +172,7 @@ class FdsApplicationTests {
         assertEquals(10, retrievedModule.getCreditPoints());
 
     }
+
     @Test
     void testAddModuleToPartnerUniversity() {
         // Create or retrieve an existing university
@@ -250,10 +254,13 @@ class FdsApplicationTests {
             }
         }
     }
-    //Encountered Issue: I debugged the deletion test, and it seems like the field partnerUniversity inside a module
-    //is null, even though this crud operation is functioning in Postman. Adding however seems to have no problems.
-    //Breakpoint set here for  in line 237
 
+    //Encountered Issue: I debugged the deletion test, and it seems like the field partnerUniversity inside a module
+    //UPDATE: solved empty field with annotation @jsonReference("partnerUniversity") for the uni field in Module.class,
+    //as it couldn't deserialize properly.
+    //Deletion still buggy and gives 500 as status code instead of 404
+    //could not solve the bug unfortunately
+    //Breakpoint set here for  in line 237
 
     @Test
     void testUpdateModuleOfAUni2() {

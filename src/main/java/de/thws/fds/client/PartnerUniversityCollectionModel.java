@@ -6,7 +6,10 @@ import org.springframework.hateoas.EntityModel;
 
 import java.util.List;
 
-//wrapper class to handle the HATEOAS CollectionModel in PartnerUniversityController
+/**
+ * wrapper class to handle the HATEOAS CollectionModel in PartnerUniversityController
+ */
+
 public class PartnerUniversityCollectionModel {
 
     @JsonProperty("_embedded")

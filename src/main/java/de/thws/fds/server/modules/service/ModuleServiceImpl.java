@@ -13,6 +13,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+/**
+ * This class represents the Implemented Module Service. For detailed insight compare with the corresponding Interface.
+ */
 @Service
 public class ModuleServiceImpl implements ModuleService {
     private final ModuleRepo moduleRepo;

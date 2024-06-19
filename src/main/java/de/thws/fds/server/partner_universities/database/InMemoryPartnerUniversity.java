@@ -11,6 +11,10 @@ import org.springframework.core.annotation.Order;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * In-Memory Database with 3 partner universities.
+ * Dummy Data used for testing functionality of CRUD.
+ */
 @Configuration
 public class InMemoryPartnerUniversity {
     @Bean
@@ -63,6 +67,6 @@ public class InMemoryPartnerUniversity {
     @Order(1)
     @Transactional
     public CommandLineRunner commandLineRunner(PartnerUniversityRepo partnerUniversityRepository) {
-        return args -> partnerUniversityRepository.saveAll(List.of(christUniversity(), lucianUniversity(),sheffieldUniversity()));
+        return args -> partnerUniversityRepository.saveAll(List.of(christUniversity(), lucianUniversity(), sheffieldUniversity()));
     }
 }

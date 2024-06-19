@@ -1,6 +1,7 @@
 package de.thws.fds.server.modules.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import de.thws.fds.server.partner_universities.model.PartnerUniversity;
 import jakarta.persistence.*;
 
@@ -22,6 +23,7 @@ public class Module {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "uni-id", nullable = false)
     @JsonBackReference
+    @JsonProperty("partnerUniversity")
     private PartnerUniversity partnerUniversity;
 
 

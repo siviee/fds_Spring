@@ -12,6 +12,9 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.Optional;
 
+/**
+ * This class represents the Implemented PartnerUniversity Service. For detailed insight compare with the corresponding Interface.
+ */
 @Service
 public class PartnerUniversityServiceImpl implements PartnerUniversityService {
 
