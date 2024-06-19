@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.PagedModel;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -50,7 +51,9 @@ public class UniversityModuleController {
      * @param universityId The ID of the university.
      * @param pageNo       The page number for pagination.
      * @param pageSize     The page size for pagination.
-     * @return A paginated list of modules with related links: getSingle, postModule, filterModules.
+     * @return A paginated list of modules with further links,
+     * in response body: getSingle,
+     * in response header: postModule, filterModules.
      */
     @GetMapping
     public ResponseEntity<PagedModel<EntityModel<Module>>> getAllModules(
@@ -68,23 +71,27 @@ public class UniversityModuleController {
                 ))
                 .collect(Collectors.toList());
 
-
         PagedModel<EntityModel<Module>> pagedModel = PagedModel.of(moduleModels,
                 new PagedModel.PageMetadata(modulesPage.getSize(), modulesPage.getNumber(), modulesPage.getTotalElements(), modulesPage.getTotalPages())
         );
 
-        //link to post new module of a Uni
-        Link postLink = linkTo(methodOn(UniversityModuleController.class).addModule(universityId, null))
-                .withRel("add-module")
-                .withType("POST");
-        //link to filter modules of a Uni
-        Link filterLink = linkTo(methodOn(UniversityModuleController.class).filterModules(null, null, null, 0, 10))
-                .withRel("filter-modules")
-                .withType("GET");
-        pagedModel.add(postLink, filterLink);
+        // Add self-link for the method getAllModules
+        Link selfLink = linkTo(methodOn(UniversityModuleController.class).getAllModules(universityId, pageNo, pageSize))
+                .withSelfRel().withType("GET");
+        pagedModel.add(selfLink);
 
-        return ResponseEntity.ok(pagedModel);
+        // Links in den Header verschieben
+        Link postLink = linkTo(methodOn(UniversityModuleController.class).addModule(universityId, null))
+                .withRel("add-module").withType("POST");
+        Link filterLink = linkTo(methodOn(UniversityModuleController.class).filterModules(null, null, null, 0, 10))
+                .withRel("filter-modules").withType("GET");
+
+        return ResponseEntity.ok()
+                .header("Link", postLink.getHref() + "; rel=\"add-module\"")
+                .header("Link", filterLink.getHref() + "; rel=\"filter-modules\"")
+                .body(pagedModel);
     }
+
 
     /**
      * Filter modules of universities based on given criteria.
@@ -94,7 +101,7 @@ public class UniversityModuleController {
      * @param creditPoints The credit points of the module.
      * @param pageNo       The page number for pagination.
      * @param pageSize     The page size for pagination.
-     * @return A paginated list of filtered modules with direct link to the module that was found via filtering.
+     * @return A paginated list of filtered modules with self-link in response body to the module that was found via filtering.
      */
     @GetMapping("/filter")
     public ResponseEntity<PagedModel<EntityModel<Module>>> filterModules(
@@ -132,7 +139,9 @@ public class UniversityModuleController {
      *
      * @param universityId The ID of the university.
      * @param moduleId     The ID of the module.
-     * @return The module with related links: putModule, deleteModule, getAllModules.
+     * @return The module with further links,
+     * in response header: putModule, deleteModule, getAllModules
+     * in response body: getSingle (self-link)
      */
     @GetMapping("/{moduleId}")
     public ResponseEntity<EntityModel<Module>> getModuleById(@PathVariable Long universityId, @PathVariable Long moduleId) {
@@ -142,37 +151,50 @@ public class UniversityModuleController {
         }
 
         Module module = moduleServiceImpl.getModuleByIdAndUniversityId(universityId, moduleId);
-        EntityModel<Module> moduleModel = EntityModel.of(module);
+        if (module == null) {
+            return ResponseEntity.notFound().build();
+        }
 
-        // link to update module of a Uni
-        moduleModel.add(
-                linkTo(methodOn(UniversityModuleController.class).updateModule(universityId, moduleId, null))
-                        .withRel("update")
-                        .withType("PUT")
-        );
+        Link selfLink = linkTo(methodOn(UniversityModuleController.class).getModuleById(universityId, moduleId))
+                .withSelfRel();
 
-        // link to delete module of a Uni
-        moduleModel.add(
-                linkTo(methodOn(UniversityModuleController.class).deleteModule(universityId, moduleId))
-                        .withRel("delete")
-                        .withType("DELETE")
-        );
 
-        //link to get all modules of a Uni
-        moduleModel.add(
-                linkTo(methodOn(UniversityModuleController.class).getAllModules(universityId, 0, 10))
-                        .withRel("all-modules")
-        );
+        EntityModel<Module> moduleModel = EntityModel.of(module, selfLink);
 
-        return ResponseEntity.ok(moduleModel);
+
+        String updateLinkHeader = linkTo(methodOn(UniversityModuleController.class).updateModule(universityId, moduleId, null))
+                .withRel("update")
+                .withType("PUT")
+                .getHref();
+
+
+        String deleteLinkHeader = linkTo(methodOn(UniversityModuleController.class).deleteModule(universityId, moduleId))
+                .withRel("delete")
+                .withType("DELETE")
+                .getHref();
+
+
+        String allModulesLinkHeader = linkTo(methodOn(UniversityModuleController.class).getAllModules(universityId, 0, 10))
+                .withRel("all-modules")
+                .withType("GET")
+                .getHref();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.LINK, updateLinkHeader + "; rel=\"update\"")
+                .header(HttpHeaders.LINK, deleteLinkHeader + "; rel=\"delete\"")
+                .header(HttpHeaders.LINK, allModulesLinkHeader + "; rel=\"all-modules\"")
+                .body(moduleModel);
     }
+
 
     /**
      * Add a new module to an existing university.
      *
      * @param universityId The ID of the university.
      * @param module       The module that has to be added.
-     * @return The created module with link to getAllModules.
+     * @return The created module with further links,
+     * in response header: to getAllModules
+     * in response body: to getSingleModule
      */
 
     @PostMapping("/create")
@@ -185,15 +207,20 @@ public class UniversityModuleController {
             module.setPartnerUniversity(university);
             Module savedModule = moduleServiceImpl.createModuleOfUni(universityId, module);
 
-            //link to get all modules of a Uni
+            Link selfLink = linkTo(methodOn(UniversityModuleController.class).getModuleById(universityId, savedModule.getId()))
+                    .withSelfRel();
+
             Link getAllModulesLink = linkTo(methodOn(UniversityModuleController.class).getAllModules(universityId, 0, 10))
                     .withRel("all-modules").withType("GET");
 
-            EntityModel<Module> moduleModel = EntityModel.of(savedModule, getAllModulesLink);
+            EntityModel<Module> moduleModel = EntityModel.of(savedModule, selfLink);
 
-            return ResponseEntity.ok(moduleModel);
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.LINK, getAllModulesLink.toString())
+                    .body(moduleModel);
         }
     }
+
 
     /**
      * Update an existing module of the respective university.
@@ -201,7 +228,9 @@ public class UniversityModuleController {
      * @param universityId  The ID of the university.
      * @param moduleId      The ID of the module to be updated.
      * @param moduleDetails The module which has to be updated.
-     * @return The updated module with redirection to the module itself, to view updated module: getSingleModule.
+     * @return The updated module with further links
+     * in response body: getSingleModule (self-link)
+     * in response-header: getAllModule
      */
 
     @PutMapping("/{moduleId}/update")
@@ -219,13 +248,19 @@ public class UniversityModuleController {
                 module.setCreditPoints(moduleDetails.getCreditPoints());
                 Module updatedModule = moduleServiceImpl.updateModuleOfUni(module);
 
-                //link to get module by the id after updating an existing module of a Uni
-                Link getModuleLink = linkTo(methodOn(UniversityModuleController.class).getModuleById(universityId, moduleId))
-                        .withRel("module").withType("GET");
 
-                EntityModel<Module> moduleModel = EntityModel.of(updatedModule, getModuleLink);
+                Link selfLink = linkTo(methodOn(UniversityModuleController.class).getModuleById(universityId, moduleId))
+                        .withSelfRel();
 
-                return ResponseEntity.ok(moduleModel);
+
+                Link getAllModulesLink = linkTo(methodOn(UniversityModuleController.class).getAllModules(universityId, 0, 10))
+                        .withRel("all-modules").withType("GET");
+
+                EntityModel<Module> moduleModel = EntityModel.of(updatedModule, selfLink);
+
+                return ResponseEntity.ok()
+                        .header(HttpHeaders.LINK, getAllModulesLink.toString())
+                        .body(moduleModel);
             } else {
                 return ResponseEntity.notFound().build();
             }
@@ -241,7 +276,6 @@ public class UniversityModuleController {
      * @return A response indicating the result of the delete operation without any further link.
      */
 
-    //No TransitionLink for Delete
     @DeleteMapping("/{moduleId}/delete")
     public ResponseEntity<Void> deleteModule(@PathVariable Long universityId, @PathVariable Long moduleId) {
         Optional<PartnerUniversity> universityOptional = universityService.getUniversityById(universityId);

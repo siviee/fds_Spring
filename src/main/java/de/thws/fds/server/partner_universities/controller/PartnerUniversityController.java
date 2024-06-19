@@ -50,7 +50,9 @@ public class PartnerUniversityController {
      *
      * @param pageNo   the page number
      * @param pageSize the page size
-     * @return a collection of partner universities with pagination with further links: getSingle (self-link), postUni, filterUni
+     * @return a collection of partner universities with pagination with further links,
+     * in response-body: getSingle (self-link) and getAll(self-link), getAllModules
+     * in response header: postUni, filterUni
      */
     @GetMapping
     public ResponseEntity<CollectionModel<EntityModel<PartnerUniversity>>> getAllUniversities(
@@ -59,27 +61,29 @@ public class PartnerUniversityController {
     ) {
         Page<PartnerUniversity> universities = service.getAllUniversities(pageNo, pageSize);
 
-        // Convert Page<PartnerUniversity> to List<EntityModel<PartnerUniversity>>
         List<EntityModel<PartnerUniversity>> universityModels = universities.getContent().stream()
                 .map(university -> EntityModel.of(university,
-                        // Add self-link for each university
-                        linkTo(methodOn(PartnerUniversityController.class).getUniversityById(university.getId()))
-                                .withSelfRel()
+                        linkTo(methodOn(PartnerUniversityController.class).getUniversityById(university.getId())).withSelfRel(),
+                        linkTo(methodOn(UniversityModuleController.class).getAllModules(university.getId(), 0, 10)).withRel("all-modules").withType("GET")
                 ))
                 .collect(Collectors.toList());
 
-        //link to post a new Uni
         Link postLink = linkTo(methodOn(PartnerUniversityController.class).addUniversity(null))
-                .withRel("add-university")
-                .withType("POST");
-        //link to filter the Unis
+                .withRel("add-university").withType("POST");
         Link filterLink = linkTo(methodOn(PartnerUniversityController.class).filterUniversities(null, null, null, null, null, 0, 10))
-                .withRel("filter-universities")
-                .withType("GET");
+                .withRel("filter-universities").withType("GET");
 
-        CollectionModel<EntityModel<PartnerUniversity>> collectionModel = CollectionModel.of(universityModels, postLink, filterLink);
 
-        return ResponseEntity.ok(collectionModel);
+        Link selfLink = linkTo(methodOn(PartnerUniversityController.class).getAllUniversities(pageNo, pageSize))
+                .withSelfRel().withType("GET");
+
+        CollectionModel<EntityModel<PartnerUniversity>> collectionModel = CollectionModel.of(universityModels, selfLink);
+
+
+        return ResponseEntity.ok()
+                .header("Link", postLink.getHref() + "; rel=\"add-university\"")
+                .header("Link", filterLink.getHref() + "; rel=\"filter-universities\"")
+                .body(collectionModel);
     }
 
 
@@ -93,7 +97,7 @@ public class PartnerUniversityController {
      * @param contactPerson of the university
      * @param pageNo        the page number
      * @param pageSize      the page size
-     * @return a paginated list of filtered universities with further link to the partner university that was found via filtering.
+     * @return a paginated list of filtered universities with further link (self-link) to the partner university that was found via filtering.
      */
     @GetMapping("/filter")
     public ResponseEntity<PagedModel<EntityModel<PartnerUniversity>>> filterUniversities(
@@ -130,65 +134,41 @@ public class PartnerUniversityController {
      * Retrieves a specific partner university by its ID.
      *
      * @param id the university ID
-     * @return the partner university with the given ID and further links for updateUni, deleteUni, getAllUnis, getAllModulesOfUni,
+     * @return the partner university with the given ID and further links in response header for updateUni, deleteUni, getAllUnis,
      */
     @GetMapping("/{id}")
     public ResponseEntity<EntityModel<PartnerUniversity>> getUniversityById(@PathVariable Long id) {
         Optional<PartnerUniversity> university = service.getUniversityById(id);
 
         return university.map(u -> {
-            EntityModel<PartnerUniversity> universityModel = EntityModel.of(u);
-
-            //link to update a Uni
-            universityModel.add(
-                    linkTo(methodOn(PartnerUniversityController.class).updateUniversity(id, u))
-                            .withRel("update")
-                            .withType("PUT")
+            EntityModel<PartnerUniversity> universityModel = EntityModel.of(u,
+                    linkTo(methodOn(PartnerUniversityController.class).getUniversityById(id)).withSelfRel()
             );
 
-            //link to delete a Uni
-            universityModel.add(
-                    linkTo(methodOn(PartnerUniversityController.class).deleteUniversity(id))
-                            .withRel("delete")
-                            .withType("DELETE")
-            );
-
-
-            //link to get all Unis
-            universityModel.add(
-                    linkTo(methodOn(PartnerUniversityController.class).getAllUniversities(0, 10))
-                            .withRel("all-universities")
-            );
-
-            //link to get all modules for this Uni
-            universityModel.add(
-                    linkTo(methodOn(UniversityModuleController.class).getAllModules(id, 0, 10))
-                            .withRel("all-modules").withType("GET")
-            );
-
-            return ResponseEntity.ok(universityModel);
+            return ResponseEntity.ok()
+                    .header("Link", linkTo(methodOn(PartnerUniversityController.class).updateUniversity(id, u)).withRel("update").withType("PUT").getHref() + "; rel=\"update\"")
+                    .header("Link", linkTo(methodOn(PartnerUniversityController.class).deleteUniversity(id)).withRel("delete").withType("DELETE").getHref() + "; rel=\"delete\"")
+                    .header("Link", linkTo(methodOn(UniversityModuleController.class).getAllModules(id, 0, 10)).withRel("all-modules").withType("GET").getHref() + "; rel=\"all-modules\"")
+                    .body(universityModel);
         }).orElseGet(() -> ResponseEntity.notFound().build());
     }
-
 
     /**
      * Creates a new partner university.
      *
      * @param university the university to create
-     * @return the created university with further link to getAllUniversities
+     * @return the created university with further link in response header to getAllUniversities
      */
     @PostMapping("/create")
     public ResponseEntity<EntityModel<PartnerUniversity>> addUniversity(@RequestBody PartnerUniversity university) {
         PartnerUniversity createdUniversity = service.createUniversity(university);
 
-        EntityModel<PartnerUniversity> universityModel = EntityModel.of(createdUniversity);
-
-        //link to get all Unis
-        universityModel.add(
-                linkTo(methodOn(PartnerUniversityController.class).getAllUniversities(0, 10))
-                        .withRel("all-universities")
+        EntityModel<PartnerUniversity> universityModel = EntityModel.of(createdUniversity,
+                linkTo(methodOn(PartnerUniversityController.class).getUniversityById(createdUniversity.getId())).withSelfRel()
         );
+
         return ResponseEntity.created(linkTo(PartnerUniversityController.class).slash(createdUniversity.getId()).toUri())
+                .header("Link", linkTo(methodOn(PartnerUniversityController.class).getAllUniversities(0, 10)).withRel("all-universities").getHref() + "; rel=\"all-universities\"")
                 .body(universityModel);
     }
 
@@ -198,7 +178,7 @@ public class PartnerUniversityController {
      *
      * @param id         the university ID
      * @param university the updated university details
-     * @return the updated university with further link to view the updated partner university: getSingleUni
+     * @return the updated university with further link to view the updated partner university: getSingleUni (self-link)
      */
     @PutMapping("/{id}/update")
     public ResponseEntity<EntityModel<PartnerUniversity>> updateUniversity(@PathVariable Long id, @RequestBody PartnerUniversity university) {
@@ -207,20 +187,17 @@ public class PartnerUniversityController {
             university.setId(id);
             PartnerUniversity updatedUniversity = service.updateUniversity(university);
 
-            EntityModel<PartnerUniversity> universityModel = EntityModel.of(updatedUniversity);
-
-            //link to get all Unis
-            universityModel.add(
-                    linkTo(methodOn(PartnerUniversityController.class).getUniversityById(id))
-                            .withRel("university").withType("GET")
+            EntityModel<PartnerUniversity> universityModel = EntityModel.of(updatedUniversity,
+                    linkTo(methodOn(PartnerUniversityController.class).getUniversityById(id)).withSelfRel()
             );
 
-            return ResponseEntity.ok(universityModel);
+            return ResponseEntity.ok()
+                    .header("Link", linkTo(methodOn(PartnerUniversityController.class).getUniversityById(id)).withRel("university").getHref() + "; rel=\"university\"")
+                    .body(universityModel);
         } else {
             return ResponseEntity.notFound().build();
         }
     }
-
 
     /**
      * Deletes a partner university.
