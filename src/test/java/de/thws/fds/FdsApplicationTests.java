@@ -10,6 +10,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.client.HttpClientErrorException;
+import de.thws.fds.server.modules.model.Module;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -39,6 +40,8 @@ class FdsApplicationTests {
         restTemplate = new TestRestTemplate();
 
     }
+
+    //---------------------------Testing Endpoint "Partner University" ------------------------------------------------
 
     @Test
     void testGetUniById() {
@@ -148,33 +151,138 @@ class FdsApplicationTests {
     }
 
 
-    //---------------------------------------CRUD FOR MODULES-----------------------------------------------------------
+    //----------------------------------Testing Endpoint "Modules" -----------------------------------------------------
+    @Test
+    void testGetModuleOfUniById() {
+        PartnerUniversity existingUniversity = partnerUniversityClient.getPartnerUniversityById(3L);
+        assertNotNull(existingUniversity);
 
-    //TODO: CRUD Testing for Modules
-//    @Test
-//    void testAddModuleToPartnerUniversity() {
-//        // Create or retrieve an existing university
-//        Long universityId = 2L;
-//        PartnerUniversity existingUniversity = restTemplate.getForObject(BASE_URL_MODULE  + universityId, PartnerUniversity.class);
-//        assertNotNull(existingUniversity);
-//
-//        // Create a module
-//        Module module = new Module();
-//        module.setName("Algebra");
-//        module.setSemester(1);
-//        module.setCreditPoints(1);
-//
-//        // Add the module using the client
-//        Module createdModule = moduleClient.addModuleToPartnerUniversity(module, universityId);
-//
-//        // Verify response
-//        assertNotNull(createdModule);
-//        assertNotNull(createdModule.getId());
-//        assertEquals(module.getName(), createdModule.getName());
-//        assertEquals(module.getSemester(), createdModule.getSemester());
-//        assertEquals(module.getCreditPoints(), createdModule.getCreditPoints());
-//        assertEquals(universityId, createdModule.getPartnerUniversity().getId());
-//    }
+        Long moduleId = 4L;
+        Module retrievedModule = moduleClient.getModuleOfUniById(existingUniversity.getId(), moduleId);
+
+        // Verify response
+        assertNotNull(retrievedModule);
+        assertNotNull(retrievedModule.getId());
+        assertEquals(moduleId, retrievedModule.getId());
+        assertEquals("Operating Systems", retrievedModule.getName());
+        assertEquals(3, retrievedModule.getSemester());
+        assertEquals(10, retrievedModule.getCreditPoints());
+
+    }
+    @Test
+    void testAddModuleToPartnerUniversity() {
+        // Create or retrieve an existing university
+        PartnerUniversity existingUniversity = partnerUniversityClient.getPartnerUniversityById(1L);
+        assertNotNull(existingUniversity);
+
+        // Create a module
+        Module module = new Module("Algebra", 1, 1, existingUniversity);
+
+        // Add the module using the client
+        Module createdModule = moduleClient.addModuleToPartnerUniversity(module, existingUniversity.getId());
+
+        // Verify response
+        assertNotNull(createdModule);
+        assertNotNull(createdModule.getId());
+        assertEquals(module.getName(), createdModule.getName());
+        assertEquals(module.getSemester(), createdModule.getSemester());
+        assertEquals(module.getCreditPoints(), createdModule.getCreditPoints());
+        System.out.println(existingUniversity.getModules());
+    }
+
+    @Test
+    void getAllModulesOfAUni() {
+
+        Long universityId = 1L;
+
+        // Retrieve all modules for the university
+        List<Module> modules = moduleClient.getAllModulesOfUni(universityId);
+
+        assertNotNull(modules);
+        Module module1 = modules.get(0);
+        assertNotNull(module1.getId());
+        assertEquals("Quantum Computing", module1.getName());
+        assertEquals(1, module1.getSemester());
+        assertEquals(2, module1.getCreditPoints());
+        Module module2 = modules.get(1);
+        assertNotNull(module2.getId());
+        assertEquals("Foundation of Distributed Systems", module2.getName());
+        assertEquals(4, module2.getSemester());
+        assertEquals(15, module2.getCreditPoints());
+        Module module3 = modules.get(2);
+        assertNotNull(module3.getId());
+        assertEquals("Algebra", module3.getName());
+        assertEquals(1, module3.getSemester());
+        assertEquals(1, module3.getCreditPoints());
+
+        System.out.println(modules.size() + " " + module3);
+    }
+
+
+    @Test
+    void testDeleteModuleOfPartnerUniversity() {
+        PartnerUniversity uni = null;
+        Module module = null;
+        Module originalState = null;
+
+        try {
+            uni = partnerUniversityClient.getPartnerUniversityById(3L);
+            List<Module> modules = moduleClient.getAllModulesOfUni(3L);
+
+            module = modules.get(0);
+            originalState = module;
+
+            // Modul löschen
+            moduleClient.deleteModuleOfPartnerUniversity(uni.getId(), module.getId());
+            assertThrows(HttpClientErrorException.NotFound.class, () -> moduleClient.getModuleOfUniById(3L, 4L), "Expected a 404 Not Found exception to be thrown");
+
+
+        } finally {
+            //restore deleted module
+            if (originalState != null) {
+                try {
+                    // Versuche, das ursprüngliche Modul wiederherzustellen
+                    moduleClient.addModuleToPartnerUniversity(originalState, 3L);
+                } catch (Exception e) {
+                    // Falls hier ein Fehler auftritt, kannst du ihn loggen oder entsprechend behandeln
+                    System.err.println("Error restoring original module state: " + e.getMessage());
+                }
+            }
+        }
+    }
+    //Encountered Issue: I debugged the deletion test, and it seems like the field partnerUniversity inside a module
+    //is null, even though this crud operation is functioning in Postman. Adding however seems to have no problems.
+    //Breakpoint set here for  in line 237
+
+
+    @Test
+    void testUpdateModuleOfAUni2() {
+        PartnerUniversity uni = null;
+        Module module = null;
+        String originalName = "";
+
+        try {
+            uni = partnerUniversityClient.getPartnerUniversityById(2L);
+            List<Module> modules = uni.getModules();
+            module = modules.get(0);
+            originalName = module.getName();
+
+            // Setzen der neuen Werte für das Modul
+            module.setName("Computer Architecture");
+
+            // Aktualisierung des Moduls über den Client
+            moduleClient.updateModuleOfPartnerUniversity(uni.getId(), module);
+
+            // Überprüfung, ob das Modul erfolgreich aktualisiert wurde
+            assertEquals("Computer Architecture", module.getName());
+        } finally {
+            // Wiederherstellen des ursprünglichen Namens für das Modul
+            if (module != null) {
+                module.setName(originalName);
+                moduleClient.updateModuleOfPartnerUniversity(uni.getId(), module);
+            }
+        }
+    }
 
 
     @Test

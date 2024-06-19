@@ -12,9 +12,14 @@ import de.thws.fds.server.partner_universities.repository.PartnerUniversityRepo;
 
 import java.util.List;
 
+/**
+ * In-Memory Database with 4 Modules assigned individually to the existing universities.
+ * Dummy Data used for testing functionality of CRUD.
+ *
+ */
+
 @Configuration
 public class InMemoryModule {
-
     @Bean
     @Order(2)
     @Transactional

@@ -4,8 +4,13 @@ import de.thws.fds.server.modules.model.Module;
 import org.springframework.data.domain.Page;
 
 import java.util.Optional;
+/**
+ * Service interface for managing {@link Module} entities.
+ * Provides methods for CRUD operations and a filtering method with few querries.
+ */
 
 public interface ModuleService {
+
     Optional<Module> getModuleById(Long id);
 
     Module createModuleOfUni(Long universityId, Module module);

@@ -19,6 +19,11 @@ import java.util.stream.Collectors;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
+/**
+ * REST controller for managing modules of a partner university.
+ * This controller provides endpoints to create, read, update, delete, and filter modules of a university.
+ * Controller class also contains HATEOAS by providing links of further possible states.
+ */
 @RestController
 @RequestMapping("/api/v1/universities/{universityId}/modules")
 public class UniversityModuleController {
@@ -26,6 +31,12 @@ public class UniversityModuleController {
     private final PartnerUniversityServiceImpl universityService;
     private final ModuleServiceImpl moduleServiceImpl;
 
+    /**
+     * Constructor for UniversityModuleController.
+     *
+     * @param universityService Service for managing partner universities.
+     * @param moduleServiceImpl Service for managing modules.
+     */
 
     @Autowired
     public UniversityModuleController(PartnerUniversityServiceImpl universityService, ModuleServiceImpl moduleServiceImpl) {
@@ -33,6 +44,14 @@ public class UniversityModuleController {
         this.moduleServiceImpl = moduleServiceImpl;
     }
 
+    /**
+     * Get all modules of a university by using the identifier of a specific university.
+     *
+     * @param universityId The ID of the university.
+     * @param pageNo       The page number for pagination.
+     * @param pageSize     The page size for pagination.
+     * @return A paginated list of modules with related links: getSingle, postModule, filterModules.
+     */
     @GetMapping
     public ResponseEntity<PagedModel<EntityModel<Module>>> getAllModules(
             @PathVariable Long universityId,
@@ -67,6 +86,16 @@ public class UniversityModuleController {
         return ResponseEntity.ok(pagedModel);
     }
 
+    /**
+     * Filter modules of universities based on given criteria.
+     *
+     * @param name         The name of the module.
+     * @param semester     The semester of the module.
+     * @param creditPoints The credit points of the module.
+     * @param pageNo       The page number for pagination.
+     * @param pageSize     The page size for pagination.
+     * @return A paginated list of filtered modules with direct link to the module that was found via filtering.
+     */
     @GetMapping("/filter")
     public ResponseEntity<PagedModel<EntityModel<Module>>> filterModules(
             @RequestParam Optional<String> name,
@@ -98,7 +127,13 @@ public class UniversityModuleController {
         return ResponseEntity.ok(pagedModel);
     }
 
-
+    /**
+     * Get a specific module by its ID and university ID (as module exists only just with a university).
+     *
+     * @param universityId The ID of the university.
+     * @param moduleId     The ID of the module.
+     * @return The module with related links: putModule, deleteModule, getAllModules.
+     */
     @GetMapping("/{moduleId}")
     public ResponseEntity<EntityModel<Module>> getModuleById(@PathVariable Long universityId, @PathVariable Long moduleId) {
         Optional<PartnerUniversity> universityOptional = universityService.getUniversityById(universityId);
@@ -132,6 +167,13 @@ public class UniversityModuleController {
         return ResponseEntity.ok(moduleModel);
     }
 
+    /**
+     * Add a new module to an existing university.
+     *
+     * @param universityId The ID of the university.
+     * @param module       The module that has to be added.
+     * @return The created module with link to getAllModules.
+     */
 
     @PostMapping("/create")
     public ResponseEntity<EntityModel<Module>> addModule(@PathVariable Long universityId, @RequestBody Module module) {
@@ -153,6 +195,14 @@ public class UniversityModuleController {
         }
     }
 
+    /**
+     * Update an existing module of the respective university.
+     *
+     * @param universityId  The ID of the university.
+     * @param moduleId      The ID of the module to be updated.
+     * @param moduleDetails The module which has to be updated.
+     * @return The updated module with redirection to the module itself, to view updated module: getSingleModule.
+     */
 
     @PutMapping("/{moduleId}/update")
     public ResponseEntity<EntityModel<Module>> updateModule(@PathVariable Long universityId, @PathVariable Long moduleId, @RequestBody Module moduleDetails) {
@@ -182,6 +232,14 @@ public class UniversityModuleController {
         }
         return ResponseEntity.notFound().build();
     }
+
+    /**
+     * Delete a module from a university.
+     *
+     * @param universityId The ID of the university.
+     * @param moduleId     The ID of the module to be deleted.
+     * @return A response indicating the result of the delete operation without any further link.
+     */
 
     //No TransitionLink for Delete
     @DeleteMapping("/{moduleId}/delete")

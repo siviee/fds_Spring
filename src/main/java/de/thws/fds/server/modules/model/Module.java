@@ -4,7 +4,11 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import de.thws.fds.server.partner_universities.model.PartnerUniversity;
 import jakarta.persistence.*;
 
-
+/**
+ * Represents a module of a partner university.
+ * A module is therefor a sub-ressource and contains information like name of the module, semester in which the module
+ * is offered, credit points and the university to which it belongs.
+ */
 @Entity
 @Table
 public class Module {
@@ -72,7 +76,7 @@ public class Module {
         return partnerUniversity;
     }
 
-        public void setPartnerUniversity(PartnerUniversity partnerUniversity) {
+    public void setPartnerUniversity(PartnerUniversity partnerUniversity) {
         this.partnerUniversity = partnerUniversity;
     }
 
